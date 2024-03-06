@@ -43,18 +43,15 @@ class TaskManager:
         self.employees = []
 
     def add_task(self, task, employee_id):
-        # Перевіряємо, чи не пусті поля
         if not task.task_id or not task.name or not task.description:
             print("Please provide valid task ID, name, and description.")
             return
 
-        # Перевіряємо, чи не існує вже завдання з таким ID
         for existing_task in self.tasks:
             if existing_task.task_id == task.task_id:
                 print(f"Task with ID {task.task_id} already exists.")
                 return
 
-        # Перевіряємо, чи існує робітник з вказаним ID
         employee_found = False
         for employee in self.employees:
             if employee.employee_id == employee_id:
@@ -69,12 +66,10 @@ class TaskManager:
         self.save_data()
 
     def add_employee(self, employee):
-        # Перевіряємо, чи не пусті поля
         if not employee.employee_id or not employee.name or not employee.email:
             print("Please provide valid employee ID, name, and email.")
             return
 
-        # Перевіряємо, чи не існує вже робітника з таким ID або електронною адресою
         for existing_employee in self.employees:
             if existing_employee.employee_id == employee.employee_id:
                 print(f"Employee with ID {employee.employee_id} already exists.")
@@ -93,7 +88,7 @@ class TaskManager:
                 self.save_data()
                 break
 
-    def delete_task(self, task_id):
+    def delete_task(self, task_id: int):
         task_found = False
         for task in self.tasks:
             if task.task_id == task_id:
@@ -105,7 +100,7 @@ class TaskManager:
         if not task_found:
             print(f"Task with ID {task_id} not found.")
 
-    def delete_employee(self, employee_id):
+    def delete_employee(self, employee_id: int):
         employee_found = False
         for employee in self.employees:
             if employee.employee_id == employee_id:
@@ -168,7 +163,7 @@ class TaskManager:
         except FileNotFoundError:
             print("Файл з даними не знайдено.")
 
-    def list_employee_tasks(self, employee_id):
+    def list_employee_tasks(self, employee_id: int):
         tasks_found = False
         for task in self.tasks:
             if task.assigned_employee == employee_id:
@@ -182,32 +177,30 @@ class TaskManager:
 
     def check_task_status_and_remind(self):
         try:
-            with open('data.json', 'r') as data_file:
-                data = json.load(data_file)
-                tasks = data.get("tasks", [])
-                employees_with_unfinished_tasks = {}
+            employees_with_unfinished_tasks = {}
 
-                for task_data in tasks:
-                    assigned_employee = task_data.get('assigned_employee')
-                    if assigned_employee and not task_data['status']:
-                        employee_id = assigned_employee['employee_id']
-                        employee_name = assigned_employee['name']
-                        task_name = task_data['name']
-                        if employee_id in employees_with_unfinished_tasks:
-                            employees_with_unfinished_tasks[employee_id]['tasks'].append(task_name)
-                        else:
-                            employees_with_unfinished_tasks[employee_id] = {'name': employee_name, 'tasks': [task_name]}
+            for task in self.tasks:
+                if task.assigned_employee and not task.status:
+                    employee_id = task.assigned_employee
+                    employee_name = self.get_employee_name(employee_id)
+                    task_name = task.name
+                    if employee_id in employees_with_unfinished_tasks:
+                        employees_with_unfinished_tasks[employee_id]['tasks'].append(task_name)
+                    else:
+                        employees_with_unfinished_tasks[employee_id] = {'name': employee_name, 'tasks': [task_name]}
 
-                if employees_with_unfinished_tasks:
-                    print("Працівники з невиконаними завданнями:")
-                    for employee_id, employee_data in employees_with_unfinished_tasks.items():
-                        tasks_str = ', '.join(employee_data['tasks'])
-                        print(f"{employee_data['name']} (ID: {employee_id}): {tasks_str}.")
-                    print("Нагадування відправлено.")
-                else:
-                    print("Усі завдання виконані.")
+            if employees_with_unfinished_tasks:
+                print("Працівники з невиконаними завданнями:")
+                for employee_id, employee_data in employees_with_unfinished_tasks.items():
+                    tasks_str = ', '.join(employee_data['tasks'])
+                    print(f"{employee_data['name']} (ID: {employee_id}): {tasks_str}.")
+                print("Нагадування відправлено.")
+            else:
+                print("Усі завдання виконані.")
         except FileNotFoundError:
             print("Файл з даними не знайдено.")
+        except KeyError:
+            print("Помилка у форматі даних. Перевірте структуру файлу 'data.json'.")
 
     def get_employee_name(self, employee_id):
         for employee in self.employees:
@@ -218,7 +211,6 @@ class TaskManager:
 
 if __name__ == "__main__":
     task_manager = TaskManager()
-    # Завантажуємо дані при запуску програми
     task_manager.load_data()
 
     while True:
@@ -272,7 +264,6 @@ if __name__ == "__main__":
             task_manager.check_task_status_and_remind()
         elif choice == "10":
             print("Завершення програми.")
-            # Зберігаємо дані перед виходом
             task_manager.save_data()
             break
         else:
